@@ -38,7 +38,7 @@ function start(){
     navigator.mediaDevices.webkitGetUserMedia ||
     navigator.mediaDevices.mozGetUserMedia;
 
-    navigator.mediaDevices.getUserMedia({audio:false,video:true})
+    navigator.mediaDevices.getUserMedia({audio:true,video:true})
         .then(successCallback)
         .catch(log)   
 }
