@@ -14,7 +14,7 @@ const io = new Server(server,{
 io.sockets.on('connection',function(socket){
     socket.on('message',function (message){
         log('S --> got message: ', message);
-        socket.broadcast.to(message.channel).emit('message', message);
+        socket.broadcast.to(message.channel).emit('message', message.message);
     })
 
     socket.on('create or join',function(room){
@@ -35,6 +35,7 @@ io.sockets.on('connection',function(socket){
     })
 
     function log(){
+        
         var array=[">>> "]
         for(var i=0;i<arguments.length;i++){
             array.push(arguments[i])

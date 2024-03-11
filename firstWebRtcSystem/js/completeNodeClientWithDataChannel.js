@@ -107,20 +107,21 @@ socket.on('log',function(array){
 
 socket.on('message',function(message){
     console.log('Received message:', message);
-    if (message === 'got user media') {
+    if (room!==undefined && message === 'got user media') {
+        console.log("check and start run krra")
         checkAndStart();
     }
-    else if (message.type === 'offer') {
+    else if (message.type!==undefined && message.type === 'offer') {
         if (!isInitiator && !isStarted) {
             checkAndStart();
         }
         pc.setRemoteDescription(new RTCSessionDescription(message));
         doAnswer();
     } 
-    else if(message.type==='answer' && isStarted){
+    else if(message.type!==undefined && message.type==='answer' && isStarted){
         pc.setRemoteDescription(message)
     }
-    else if(message.type === 'candidate' && isStarted){
+    else if(message.type!==undefined && message.type === 'candidate' && isStarted){
         var candidate= new RTCIceCandidate({sdpMLineIndex:message.label,
             candidate:message.candidate});
         pc.addIceCandidate(candidate)
@@ -133,17 +134,22 @@ socket.on('message',function(message){
 
 function sendMessage(message){
     console.log('Sending message',message)
-    socket.emit('message',message)
+    // if(message==='got user media'){
+        socket.emit('message',{channel:room,message:message})
+    // }
+    // else{
+    //     socket.emit('message',message)
+    // }
 }
 
 function checkAndStart(){
-    if(!isStarted && typeof localStream!=='undefined' && isChannelReady){
+    if(!isStarted && typeof localStream!==undefined && isChannelReady){
         createPeerConnection()
-    console.log(" i am under check and start and this isInitiator valie",isInitiator)
-    isStarted=true
-    if(isInitiator){
-        doCall()
-    }
+        console.log(" i am under check and start and this isInitiator valie",isInitiator)
+        isStarted=true
+        if(isInitiator){
+            doCall()
+        }
 }
 }
 
@@ -170,14 +176,15 @@ function createPeerConnection(){
             sendChannel = pc.createDataChannel("sendDataChannel",
             {reliable: true});
             trace('Created send data channel');
-            sendChannel.onopen = handleSendChannelStateChange;
-            sendChannel.onmessage = handleMessage;
-            sendChannel.onclose = handleSendChannelStateChange;
+            
         }
         catch(e){
             alert('Failed to create data channel. ');
             trace('createDataChannel() failed with exception: ' + e.message);
         }
+        sendChannel.onopen = handleSendChannelStateChange;
+        sendChannel.onmessage = handleMessage;
+        sendChannel.onclose = handleSendChannelStateChange;
     }else{
         pc.ondatachannel = gotReceiveChannel;
     }
@@ -206,7 +213,7 @@ function handleMessage(event){
 function handleSendChannelStateChange(){
     var readyState=sendChannel.readyState
     trace('Send Channel state is:'+readyState)
-    if(readyState==='open'){
+    if(readyState=='open'){
         sendTextarea.focus()
         sendTextarea.disabled=false
         sendTextarea.placeholder=""
@@ -222,7 +229,7 @@ function handleReceiveChannelStateChange() {
     var readyState = receiveChannel.readyState;
     trace('Receive channel state is: ' + readyState);
 
-    if(readyState==='open'){
+    if(readyState=='open'){
         sendTextarea.focus()
         sendTextarea.disabled=false
         sendTextarea.placeholder=""
@@ -269,12 +276,15 @@ function setLocalAndSendMessage(sessionDescription){
     sendMessage(sessionDescription)
 }
 
-function handleRemoteStreamAdded(){
+function handleRemoteStreamAdded(event){
     console.log('Remote stream added.');
-    attachMediaStream(remoteVideo, event.stream);
+    remoteVideo.srcObject=event.stream
     console.log('Remote stream attached!!.');
     remoteStream = event.stream;
 }
+function handleRemoteStreamRemoved(event) {
+    console.log('Remote stream removed. Event: ', event);
+   }
 
 function hangup(){
     console.log('Hanging up')
@@ -299,3 +309,6 @@ function stop(){
 }
 
 
+function trace(msg){
+    console.log(msg)
+}
